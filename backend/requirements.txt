@@ -2,3 +2,4 @@ flask
 flask_sqlalchemy
 pydantic
 python-dotenv
+psycopg2-binary
