@@ -10,3 +10,4 @@ class User(db.Model):
     holidays = db.relationship("Holiday", back_populates="creator")
     preferences = db.relationship("Preference", back_populates="user")
     availabilities = db.relationship("Availability", back_populates="user")
+    groups = db.relationship("Group", secondary="group_members", back_populates="members")
