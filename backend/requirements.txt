@@ -1,5 +1,5 @@
 flask
 flask_sqlalchemy
-pydantic
+flask-pydantic
 python-dotenv
 psycopg2-binary
