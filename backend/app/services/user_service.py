@@ -5,7 +5,7 @@ from app.schemas.user_schema import UserCreateSchema, UserResponseSchema
 class UserService:
     @staticmethod
     def get_user(user_id: int) -> UserResponseSchema:
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if user:
             return UserResponseSchema.model_validate(user)
         return None
@@ -19,7 +19,7 @@ class UserService:
 
     @staticmethod
     def update_user(user_id: int, user_data: UserCreateSchema) -> UserResponseSchema:
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if user:
             user.name = user_data.name
             user.email = user_data.email
@@ -29,7 +29,7 @@ class UserService:
 
     @staticmethod
     def delete_user(user_id: int) -> bool:
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if user:
             db.session.delete(user)
             db.session.commit()

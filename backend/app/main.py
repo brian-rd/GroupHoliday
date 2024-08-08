@@ -1,5 +1,6 @@
 from flask import Flask
-# from app.controllers import user_controller, holiday_controller, preference_controller
+from app.controllers import user_controller
+#, holiday_controller, preference_controller
 from app.database import init_db
 
 def create_app():
@@ -8,7 +9,7 @@ def create_app():
 
     init_db(app)
 
-    # app.register_blueprint(user_controller.bp)
+    app.register_blueprint(user_controller.user_bp)
     # app.register_blueprint(holiday_controller.bp)
     # app.register_blueprint(preference_controller.bp)
 

@@ -1,7 +1,8 @@
-from pydantic import BaseModel, EmailStr, constr
+from pydantic import BaseModel, EmailStr, StringConstraints, ConfigDict
+from typing_extensions import Annotated
 
 class UserCreateSchema(BaseModel):
-    name: constr(max_length=20) # type: ignore
+    name: Annotated[str, StringConstraints(strip_whitespace=True, max_length=20, pattern=r'^\S+$')]
     email: EmailStr
 
 class UserResponseSchema(BaseModel):
@@ -9,5 +10,6 @@ class UserResponseSchema(BaseModel):
     name: str
     email: EmailStr
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(
+        from_attributes = True
+    )

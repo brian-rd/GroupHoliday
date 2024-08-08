@@ -4,3 +4,4 @@ flask-pydantic
 python-dotenv
 psycopg2-binary
 pydantic
+pydantic[email]
