@@ -1,7 +1,7 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, constr
 
 class UserCreateSchema(BaseModel):
-    name: str
+    name: constr(max_length=20) # type: ignore
     email: EmailStr
 
 class UserResponseSchema(BaseModel):
