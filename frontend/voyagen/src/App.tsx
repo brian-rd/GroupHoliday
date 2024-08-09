@@ -8,7 +8,8 @@ import {
 import './css/style.css';
 
 // Import pages
-import Landing from './pages/Landing';
+import Register from './pages/Register';
+
 
 function App() {
 
@@ -26,7 +27,7 @@ function App() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<Landing />} />
+        <Route path="/" element={<Register />} />
       </Routes>
     </>
   );
