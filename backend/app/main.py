@@ -1,12 +1,15 @@
 from flask import Flask
+from flask_cors import CORS
 from app.controllers import user_controller
 #, holiday_controller, preference_controller
 from app.database import init_db
+from app.config import Config
 
 def create_app():
     app = Flask(__name__)
-    app.config.from_object('app.config.Config')
-
+    app.config.from_object(Config)
+    CORS(app)
+    
     init_db(app)
 
     app.register_blueprint(user_controller.user_bp)

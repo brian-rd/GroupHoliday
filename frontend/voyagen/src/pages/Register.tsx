@@ -12,10 +12,22 @@ interface UserData {
     name: string;
 }
 
+const apiClient = axios.create({
+    baseURL: import.meta.env.VITE_API_BASE_URL,
+});
+
 export default function Register() {
     const mutation = useMutation({
-        mutationFn: (userData : UserData) => {
-          return axios.post('/users', userData)
+        mutationFn: async (userData: UserData) => {
+            try {
+                const response = await apiClient.post('/users', userData)
+                console.log(response)
+            } catch (error) {
+                if (axios.isAxiosError(error) && error.response) {
+                    console.log(error.response)
+                }
+                throw error
+            }
         },
     })
 
@@ -29,16 +41,16 @@ export default function Register() {
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     const [confirmError, setConfirmError] = useState(false)
-    // const [emailError, setEmailError] = useState(false)
+    const [emailError, setEmailError] = useState(false)
     const [passwordError, setPasswordError] = useState(false)
-    // const [usernameError, setUsernameError] = useState(false)
+    const [usernameError, setUsernameError] = useState(false)
 
     const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         setConfirmError(false);
-        // setEmailError(false);
+        setEmailError(false);
         setPasswordError(false);
-        // setUsernameError(false);
+        setUsernameError(false);
 
         if (password.length < 6) {
             setPasswordError(true)
@@ -50,15 +62,23 @@ export default function Register() {
 
         if (!isSubmitting) {
             setIsSubmitting(true)
-            const userCredential = await doCreateUserWithEmailAndPassword(email, password)
-            if (userCredential) {
-                const uid = userCredential.user.uid
-                const email = userCredential.user.email
-                mutation.mutate({ uid, email, name: username })
+            try {
+                const userCredential = await doCreateUserWithEmailAndPassword(email, password)
+                if (userCredential) {
+                    const uid = userCredential.user.uid
+                    const email = userCredential.user.email
+                    mutation.mutate({ uid, email, name: username })
+                }
+            } catch (error) {
+                if ((error as { code: string }).code === 'auth/email-already-in-use') {
+                    setEmailError(true)
+                    return;
+                }
             }
         }
-    }
 
+    }
+    
     const onGoogleSignIn = async () => {
         if (!isSubmitting) {
             setIsSubmitting(true)
@@ -98,7 +118,7 @@ export default function Register() {
                     <label htmlFor="email" className="block text-sm font-medium leading-4 text-gray-900">
                     Email
                     </label>
-                    <div className="mt-2">
+                    <div className="relative mt-2 rounded-md shadow-sm">
                     <input
                         id="email"
                         name="email"
@@ -106,16 +126,25 @@ export default function Register() {
                         autoComplete="email"
                         required
                         onChange={(e) => setEmail(e.target.value)}
-                        className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                    />
+                        className={`${emailError ? 'text-red-900 ring-red-300 placeholder:text-red-300 focus:ring-red-500' : 'text-gray-900 ring-gray-300 placeholder:text-gray-400 focus:ring-indigo-600'} block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6`}                    />
+                    {emailError && (
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <ExclamationCircleIcon className="w-5 h-5 text-red-500" aria-hidden="true" />
+                        </div>
+                    )}
                     </div>
+                    {emailError && (
+                        <p className="mt-2 text-sm text-red-600" id="password-error">
+                            Email is already in use
+                        </p>
+                    )}
                 </div>
 
                 <div>
                     <label htmlFor="email" className="block text-sm font-medium leading-4 text-gray-900">
                     Username
                     </label>
-                    <div className="mt-2">
+                    <div className="relative mt-2 rounded-md shadow-sm">
                     <input
                         id="username"
                         name="username"
@@ -123,9 +152,18 @@ export default function Register() {
                         autoComplete="username"
                         required
                         onChange={(e) => setUsername(e.target.value)}
-                        className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                    />
+                        className={`${usernameError ? 'text-red-900 ring-red-300 placeholder:text-red-300 focus:ring-red-500' : 'text-gray-900 ring-gray-300 placeholder:text-gray-400 focus:ring-indigo-600'} block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6`}                    />
+                    {usernameError && (
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <ExclamationCircleIcon className="w-5 h-5 text-red-500" aria-hidden="true" />
+                        </div>
+                    )}
                     </div>
+                    {usernameError && (
+                        <p className="mt-2 text-sm text-red-600" id="password-error">
+                            Username is already in use
+                        </p>
+                    )}
                 </div>
 
                 <div>
@@ -174,7 +212,7 @@ export default function Register() {
                     </div>
                     {confirmError && (
                         <p className="mt-2 text-sm text-red-600" id="confirm-error">
-                            Must match password above
+                            Password does not match
                         </p>
                     )}
                 </div>

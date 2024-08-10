@@ -1,6 +1,7 @@
 from app.database import db
 from app.models.user import User
 from app.schemas.user_schema import UserCreateSchema, UserResponseSchema
+from sqlalchemy.exc import IntegrityError
 
 class UserService:
     @staticmethod
@@ -12,9 +13,18 @@ class UserService:
 
     @staticmethod
     def create_user(user_data: UserCreateSchema) -> UserResponseSchema:
+        existing_user = db.session.query(User).filter_by(name=user_data.name).first()
+        if existing_user:
+            raise ValueError("Username already exists")
+
         user = User(uid=user_data.uid, name=user_data.name, email=user_data.email)
         db.session.add(user)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            raise ValueError("Username already exists")
+        
         return UserResponseSchema.model_validate(user)
 
     @staticmethod
