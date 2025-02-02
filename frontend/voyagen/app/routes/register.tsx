@@ -1,5 +1,5 @@
 import type { Route } from "./+types/register";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { auth } from "../firebaseConfig";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 
@@ -17,13 +17,22 @@ const Register = () => {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [notice, setNotice] = useState("");
+    const [isEmailFocused, setIsEmailFocused] = useState(false);
+    const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+    const [isConfirmFocused, setIsConfirmFocused] = useState(false);
+
+    const [isLengthValid, setIsLengthValid] = useState(false);
+    const [hasNumberOrSymbol, setHasNumberOrSymbol] = useState(false);
+    const [doPasswordsMatch, setDoPasswordsMatch] = useState(false);
+    const [isEmailValid, setIsEmailValid] = useState(false);
+    const [isFormValid, setIsFormValid] = useState(false);
 
     interface SignupEvent extends React.FormEvent<HTMLFormElement> {}
 
     const signupWithUsernameAndPassword = async (e: SignupEvent): Promise<void> => {
         e.preventDefault();
 
-        if (password === confirmPassword) {
+        if (isFormValid) {
             try {
                 await createUserWithEmailAndPassword(auth, email, password);
                 setNotice("Account created successfully!");
@@ -31,10 +40,27 @@ const Register = () => {
                 setNotice("Sorry, something went wrong. Please try again.");
             }     
         } else {
-            setNotice("Passwords don't match. Please try again.");
+            setNotice("Sorry, something went wrong. Please try again.");
         }
     };
 
+    useEffect(() => {
+      setIsLengthValid(password.length >= 8);
+      setHasNumberOrSymbol(/[0-9!@#$%^&.?£"'*]/.test(password));
+    }, [password]);
+
+    useEffect(() => {
+      setDoPasswordsMatch(password === confirmPassword);
+    }, [confirmPassword]);
+
+    useEffect(() => {
+      setIsEmailValid(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
+    }, [email]);
+
+    useEffect(() => {
+      setIsFormValid(isLengthValid && hasNumberOrSymbol && doPasswordsMatch && isEmailValid);
+    }, [isLengthValid, hasNumberOrSymbol, doPasswordsMatch, isEmailValid]);
+    
     return (
       <>
         <div className="flex flex-col justify-center flex-1 min-h-full py-12 sm:px-6 lg:px-8 ">
@@ -59,9 +85,15 @@ const Register = () => {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      onFocus={() => setIsEmailFocused(true)}
                       className="block p-3 w-full rounded-md border-0 py-1.5 outline-none text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                     />
                   </div>
+                  {isEmailFocused && !isEmailValid && (
+                    <div className="mt-1 text-xs text-red-600">
+                      Email is not valid
+                    </div>
+                    )}
                 </div>
                 <div>
                   <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">
@@ -76,8 +108,20 @@ const Register = () => {
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      onFocus={() => setIsPasswordFocused(true)}
+                      onBlur={() => setIsPasswordFocused(false)}
                       className="block p-3 w-full rounded-md border-0 outline-none py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                     />
+                    {isPasswordFocused && (
+                      <div>
+                        <div className={`mt-1 text-xs ${isLengthValid ? 'text-green-600' : 'text-gray-600'}`}>
+                          At least 8 characters long
+                        </div>
+                        <div className={`mt-1 text-xs ${hasNumberOrSymbol ? 'text-green-600' : 'text-gray-600'}`}>
+                          At least one number or symbol
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div>
@@ -92,8 +136,14 @@ const Register = () => {
                       required
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
+                      onFocus={() => setIsConfirmFocused(true)}
                       className="block p-3 w-full rounded-md border-0 outline-none py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                     />
+                    {isConfirmFocused && !doPasswordsMatch && (
+                    <div className="mt-1 text-xs text-red-600">
+                      Passwords do not match
+                    </div>
+                    )}
                   </div>
                 </div>
   
@@ -101,6 +151,7 @@ const Register = () => {
                   <button
                     type="submit"
                     className="flex w-full cursor-pointer justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                    disabled={!isFormValid}
                   >
                     Register
                   </button>
