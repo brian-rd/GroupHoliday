@@ -1,5 +1,7 @@
 # Group Holiday Tracker 🏖️
 
+A full-stack website designed to simplify the process of booking and planning group holidays.
+
 ## Motivation
 
 For the last two years I've been in charge of organising group holidays, so I've decided to make a web application that can help with this process.  It's designed to simplify the process of having to find out when everyone's available, what they want to do, their budgets, where they want to go, etc. 
