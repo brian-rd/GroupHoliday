@@ -46,7 +46,7 @@ export default function LoginPage() {
     if (!isLoaded) return
 
     try {
-      const result = await signIn.authenticateWithRedirect({
+      await signIn.authenticateWithRedirect({
         strategy: "oauth_google",
         redirectUrl: "/sso-callback",
         redirectUrlComplete: "/dashboard",
