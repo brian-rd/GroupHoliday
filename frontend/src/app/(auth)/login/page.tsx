@@ -1,65 +1,109 @@
 "use client"
 
 import type React from "react"
-
+import { useSignIn } from "@clerk/nextjs"
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { toast } from "sonner"
-import { LoaderCircle } from "lucide-react"
+import { Toaster, toast } from "sonner"
+import { Loader2 } from "lucide-react"
 
 export default function LoginPage() {
+  const { isLoaded, signIn, setActive } = useSignIn()
   const [isLoading, setIsLoading] = useState(false)
+  const [emailAddress, setEmailAddress] = useState("")
+  const [password, setPassword] = useState("")
   const router = useRouter()
 
-  async function onSubmit(event: React.SyntheticEvent) {
-    event.preventDefault()
-    setIsLoading(true)
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!isLoaded) return
 
-    setTimeout(() => {
-      setIsLoading(false)
-      toast.success("Success", {
-        description: "You have successfully logged in.",
+    try {
+      setIsLoading(true)
+      const result = await signIn.create({
+        identifier: emailAddress,
+        password,
       })
-      router.push("/dashboard")
-    }, 3000)
+
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId })
+        router.push("/dashboard")
+      }
+    } catch (error: any) {
+      toast.error("Error", {
+        description: error.errors?.[0]?.message || "Something went wrong",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const signInWithGoogle = async () => {
+    if (!isLoaded) return
+
+    try {
+      const result = await signIn.authenticateWithRedirect({
+        strategy: "oauth_google",
+        redirectUrl: "/sso-callback",
+        redirectUrlComplete: "/dashboard",
+      })
+    } catch (error: any) {
+      toast.error("Error", {
+        description: error.errors?.[0]?.message || "Something went wrong",
+      })
+    }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-gray-100 to-gray-200">
-      <div className="w-full max-w-md space-y-8 rounded-xl bg-white p-10 shadow-2xl">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold">Welcome back</h1>
-          <p className="mt-2 text-sm text-gray-600">Please sign in to your account</p>
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+      <Toaster
+        toastOptions={{
+          style: {
+            color: 'red',
+          },
+        }}
+      />
+      <div className="w-full max-w-md space-y-6">
+        <div className="space-y-2 text-center">
+          <h1 className="text-2xl font-bold">Welcome back</h1>
+          <p className="text-gray-500">Please sign in to your account</p>
         </div>
-        <form onSubmit={onSubmit} className="mt-8 space-y-6">
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                placeholder="m@example.com"
-                type="email"
-                autoCapitalize="none"
-                autoComplete="email"
-                autoCorrect="off"
-                disabled={isLoading}
-              />
-            </div>
-            <div>
+
+        <form onSubmit={onSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="m@example.com"
+              value={emailAddress}
+              onChange={(e) => setEmailAddress(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" autoComplete="current-password" disabled={isLoading} />
+              <Link href="/forgot-password" className="ml-auto inline-block text-sm underline">
+                Forgot your password?
+              </Link>
             </div>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
           </div>
-          <div>
-            <Button className="w-full" type="submit" disabled={isLoading}>
-              {isLoading && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
-              Sign In
-            </Button>
-          </div>
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Sign In
+          </Button>
         </form>
 
         <div className="relative">
@@ -67,12 +111,13 @@ export default function LoginPage() {
             <span className="w-full border-t" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-white px-2 text-gray-500">Or continue with</span>
+            <span className="bg-gray-50 px-2 text-muted-foreground">Or continue with</span>
           </div>
         </div>
-        <Button variant="outline" type="button" disabled={isLoading} className="w-full">
+
+        <Button variant="outline" type="button" disabled={isLoading} onClick={signInWithGoogle} className="w-full">
             {isLoading ? (
-            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
             <svg
               className="mr-2 h-4 w-4"

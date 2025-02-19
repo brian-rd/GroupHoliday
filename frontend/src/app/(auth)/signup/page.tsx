@@ -1,22 +1,27 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, AlertCircle } from "lucide-react"
-import { toast } from "sonner"
+import { Loader2 } from "lucide-react"
+import { Toaster, toast } from "sonner"
+import { useSignUp } from "@clerk/nextjs"
+
 
 
 export default function SignUpPage() {
+  const { isLoaded, signUp, setActive } = useSignUp()
   const [isLoading, setIsLoading] = useState(false)
+  const [verifying, setVerifying] = useState(false)
+  const [code, setCode] = useState("")
+  const [displayName, setDisplayName] = useState("")
+  const [emailAddress, setEmailAddress] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [passwordError, setPasswordError] = useState("")
   const router = useRouter()
 
   const validatePassword = (password: string) => {
@@ -29,118 +34,205 @@ export default function SignUpPage() {
     return ""
   }
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newPassword = e.target.value
-    setPassword(newPassword)
-    setPasswordError(validatePassword(newPassword))
-  }
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!isLoaded) return
 
-  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setConfirmPassword(e.target.value)
-  }
-
-  async function onSubmit(event: React.SyntheticEvent) {
-    event.preventDefault()
-    setIsLoading(true)
+    if (password !== confirmPassword) {
+      toast.error("Error", {
+        description: "Passwords do not match.",
+      })
+      setIsLoading(false)
+      return
+    }
 
     const error = validatePassword(password)
     if (error) {
-      setPasswordError(error)
-      setIsLoading(false)
-      return
-    }
-
-    if (password !== confirmPassword) {
-      setPasswordError("Passwords do not match")
-      setIsLoading(false)
-      return
-    }
-
-    // Here you would typically call your sign-up function
-    // For this example, we'll just simulate a delay
-    setTimeout(() => {
-      setIsLoading(false)
-      toast.success("Account created successfully", {
-        description: "Please check your email for confirmation.",
+      toast.error("Error", {
+        description: error,
       })
-      router.push("/login")
-    }, 3000)
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      setIsLoading(true)
+      await signUp.create({
+        emailAddress,
+        password,
+        firstName: displayName
+      })
+
+      // Send the user an email with the verification code
+      await signUp.prepareEmailAddressVerification({
+        strategy: 'email_code',
+      })
+
+      // Set 'verifying' true to display second form
+      // and capture the OTP code
+      setVerifying(true)
+      setIsLoading(false)
+    } catch (error: any) {
+      // See https://clerk.com/docs/custom-flows/error-handling
+      // for more info on error handling
+      toast.error("Error", {
+        description: error.errors?.[0]?.message || "Something went wrong",
+      })
+      setIsLoading(false)
+    }
+  }
+
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+
+    if (!isLoaded) return
+
+    try {
+      // Use the code the user provided to attempt verification
+      const completeSignUp = await signUp.attemptEmailAddressVerification({
+        code,
+      })
+
+      // If verification was completed, set the session to active
+      // and redirect the user
+      if (completeSignUp.status === 'complete') {
+        await setActive({ session: completeSignUp.createdSessionId })
+        router.push('/dashboard')
+        setIsLoading(false)
+      } else {
+        // If the status is not complete, check why. User may need to
+        // complete further steps.
+        console.error(JSON.stringify(completeSignUp, null, 2))
+        setIsLoading(false)
+      }
+    } catch (error: any) {
+      // See https://clerk.com/docs/custom-flows/error-handling
+      // for more info on error handling
+      toast.error("Error", {
+        description: error.errors?.[0]?.message || "Something went wrong",
+      })
+      setIsLoading(false)
+    }
+  }
+
+  const signUpWithGoogle = async () => {
+    if (!isLoaded) return
+
+    try {
+      const result = await signUp.authenticateWithRedirect({
+        strategy: "oauth_google",
+        redirectUrl: "/sso-callback",
+        redirectUrlComplete: "/dashboard",
+      })
+    } catch (error: any) {
+      toast.error("Error", {
+        description: error.errors?.[0]?.message || "Something went wrong",
+      })
+    }
+  }
+
+  if (verifying) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+        <Toaster
+          toastOptions={{
+            style: {
+              color: 'red',
+            },
+          }}
+        />
+      <div className="w-full max-w-md space-y-6">
+          <div className="space-y-2 text-center">
+            <h1 className="text-2xl font-bold">Verify your email</h1>
+            <p className="text-gray-500">We&apos;ve sent a verification code to your email</p>
+          </div>
+          
+          <form onSubmit={handleVerify} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="code">Verification Code</Label>
+              <Input
+                id="code"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="Enter code..."
+                required
+              />
+            </div>
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Verify Email
+            </Button>
+          </form>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-gray-100 to-gray-200">
-      <div className="w-full max-w-md space-y-8 rounded-xl bg-white p-10 shadow-2xl">
-        <div className="text-center">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+      <Toaster
+        toastOptions={{
+          style: {
+            color: 'red',
+          },
+        }}
+      />
+      <div className="w-full max-w-md space-y-6">
+        <div className="space-y-2 text-center">
+          <div id='clerk-captcha' />
           <h1 className="text-3xl font-bold">Create an account</h1>
           <p className="mt-2 text-sm text-gray-600">Sign up to get started</p>
         </div>
-        <form onSubmit={onSubmit} className="mt-8 space-y-6">
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                placeholder="John Doe"
-                type="text"
-                autoCapitalize="words"
-                autoComplete="name"
-                autoCorrect="off"
-                disabled={isLoading}
-              />
-            </div>
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                placeholder="m@example.com"
-                type="email"
-                autoCapitalize="none"
-                autoComplete="email"
-                autoCorrect="off"
-                disabled={isLoading}
-              />
-            </div>
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="new-password"
-                disabled={isLoading}
-                value={password}
-                onChange={handlePasswordChange}
-              />
-              {passwordError && (
-                <p className="mt-1 flex items-center text-xs text-red-500">
-                  <AlertCircle className="mr-1 h-4 w-4" />
-                  {passwordError}
-                </p>
-              )}
-              <p className="mt-1 text-xs text-gray-500">
-                Password must be at least 8 characters long and contain at least one special character.
-              </p>
-            </div>
-            <div>
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                autoComplete="new-password"
-                disabled={isLoading}
-                value={confirmPassword}
-                onChange={handleConfirmPasswordChange}
-              />
-            </div>
+        <form onSubmit={onSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Display Name</Label>
+            <Input
+              id="name"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="John Doe"
+              required
+            />
           </div>
-          <div>
-            <Button
-              className="w-full"
-              type="submit"
-              disabled={isLoading || !!passwordError || password !== confirmPassword}
-            >
-              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Sign Up"}
-            </Button>
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={emailAddress}
+              onChange={(e) => setEmailAddress(e.target.value)}
+              placeholder="m@example.com"
+              required
+            />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <p className="text-xs text-muted-foreground">
+              Password must be at least 8 characters long and contain at least one special character.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirm-password">Confirm Password</Label>
+            <Input
+              id="confirm-password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+            />
+          </div>
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Sign Up
+          </Button>
         </form>
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
@@ -150,24 +242,15 @@ export default function SignUpPage() {
             <span className="bg-white px-2 text-gray-500">Or continue with</span>
           </div>
         </div>
-        <Button variant="outline" type="button" disabled={isLoading} className="w-full">
+        <Button variant="outline" type="button" disabled={isLoading} onClick={signUpWithGoogle} className="w-full">
           {isLoading ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
-            <svg
-              className="mr-2 h-4 w-4"
-              aria-hidden="true"
-              focusable="false"
-              data-prefix="fab"
-              data-icon="google"
-              role="img"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 488 512"
-            >
-              <path
-                fill="currentColor"
-                d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"
-              ></path>
+            <svg viewBox="0 0 24 24" aria-hidden="true" className="w-5 h-5 my-2">
+              <path d="M12.0003 4.75C13.7703 4.75 15.3553 5.36002 16.6053 6.54998L20.0303 3.125C17.9502 1.19 15.2353 0 12.0003 0C7.31028 0 3.25527 2.69 1.28027 6.60998L5.27028 9.70498C6.21525 6.86002 8.87028 4.75 12.0003 4.75Z" fill="#EA4335"></path>
+              <path d="M23.49 12.275C23.49 11.49 23.415 10.73 23.3 10H12V14.51H18.47C18.18 15.99 17.34 17.25 16.08 18.1L19.945 21.1C22.2 19.01 23.49 15.92 23.49 12.275Z" fill="#4285F4"></path>
+              <path d="M5.26498 14.2949C5.02498 13.5699 4.88501 12.7999 4.88501 11.9999C4.88501 11.1999 5.01998 10.4299 5.26498 9.7049L1.275 6.60986C0.46 8.22986 0 10.0599 0 11.9999C0 13.9399 0.46 15.7699 1.28 17.3899L5.26498 14.2949Z" fill="#FBBC05"></path>
+              <path d="M12.0004 24.0001C15.2404 24.0001 17.9654 22.935 19.9454 21.095L16.0804 18.095C15.0054 18.82 13.6204 19.245 12.0004 19.245C8.8704 19.245 6.21537 17.135 5.2654 14.29L1.27539 17.385C3.25539 21.31 7.3104 24.0001 12.0004 24.0001Z" fill="#34A853"></path>
             </svg>
           )}{" "}
           Google
