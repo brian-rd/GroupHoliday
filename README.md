@@ -26,16 +26,11 @@ For the last two years I've been in charge of organising group holidays, so I've
 - React
 - Typescript
 - Tailwind CSS
-- Vite
-- React Router
-- Firebase
+- Next.JS
 
 ### Backend
-- Flask
-- SQLAlchemy
-- Pydantic
-- PostgreSQL
-- Python
+- Supabase
+- Python (FastAPI)
 
 ### Other
 - Pytest
