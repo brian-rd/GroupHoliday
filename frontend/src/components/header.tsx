@@ -12,16 +12,16 @@ const VoyagenLogo = () => (
   >
     <defs>
       <linearGradient id="coastalBlue" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-        <stop stop-color="#1E81B0"/>
-        <stop offset="1" stop-color="#5AB9EA"/>
+        <stop stopColor="#1E81B0"/>
+        <stop offset="1" stopColor="#5AB9EA"/>
       </linearGradient>
     </defs>
     <path
       d="M4 6 L16 26 L28 6"
       stroke="url(#coastalBlue)"
-      stroke-width="3"
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
     />
   </svg>
 )

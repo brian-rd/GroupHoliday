@@ -1,3 +1,5 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { Users, Calendar1, Map, DollarSign, Vote, RefreshCw } from "lucide-react"
 import Link from 'next/link'
