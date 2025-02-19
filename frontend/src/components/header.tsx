@@ -1,6 +1,7 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Home, LogIn, UserPlus } from "lucide-react"
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Home, LogIn, UserPlus } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const VoyagenLogo = () => (
   <svg
@@ -11,9 +12,16 @@ const VoyagenLogo = () => (
     xmlns="http://www.w3.org/2000/svg"
   >
     <defs>
-      <linearGradient id="coastalBlue" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-        <stop stopColor="#1E81B0"/>
-        <stop offset="1" stopColor="#5AB9EA"/>
+      <linearGradient
+        id="coastalBlue"
+        x1="0"
+        y1="0"
+        x2="32"
+        y2="32"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop stopColor="#1E81B0" />
+        <stop offset="1" stopColor="#5AB9EA" />
       </linearGradient>
     </defs>
     <path
@@ -24,7 +32,7 @@ const VoyagenLogo = () => (
       strokeLinejoin="round"
     />
   </svg>
-)
+);
 
 export function Header() {
   return (
@@ -35,6 +43,7 @@ export function Header() {
           <span className="text-2xl font-bold text-gray-900">Voyagen</span>
         </Link>
         <nav className="hidden md:flex space-x-4 lg:space-x-6">
+          <ThemeToggle />
           <Button variant="ghost" asChild>
             <Link href="/">
               <Home className="h-4 w-4 mr-2" />
@@ -59,6 +68,5 @@ export function Header() {
         </Button>
       </div>
     </header>
-  )
+  );
 }
-
