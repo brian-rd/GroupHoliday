@@ -27,13 +27,15 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider afterSignOutUrl="/">
       <html lang="en" suppressHydrationWarning>
         <body className={inter.className}>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-            <Header />
-            {children}
-          </ThemeProvider>
+          <div className="min-h-screen flex flex-col">
+            <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+              <Header />
+              <main className="flex-grow flex items-center justify-center  bg-gray-50">{children}</main>
+            </ThemeProvider>
+          </div>
         </body>
       </html>
     </ClerkProvider>
