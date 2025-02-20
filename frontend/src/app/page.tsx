@@ -1,11 +1,18 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Users, Calendar1, Map, DollarSign, Vote, RefreshCw } from "lucide-react"
-import Link from 'next/link'
-import { useSession, useUser } from '@clerk/nextjs'
-import { createClient } from '@supabase/supabase-js'
-
+import { Button } from "@/components/ui/button";
+import {
+  Users,
+  Calendar1,
+  Map,
+  DollarSign,
+  Vote,
+  RefreshCw,
+} from "lucide-react";
+import Link from "next/link";
+import { useSession, useUser } from "@clerk/nextjs";
+import { createClient } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
 
 interface Feature {
   name: string;
@@ -15,47 +22,48 @@ interface Feature {
 
 const features: Feature[] = [
   {
-    name: 'Effortless Planning',
+    name: "Effortless Planning",
     description:
-      'Create a trip, invite your group, and let AI handle the hard work—no more endless discussions.',
+      "Create a trip, invite your group, and let AI handle the hard work—no more endless discussions.",
     icon: Users,
   },
   {
-    name: 'Smart Date Selection',
+    name: "Smart Date Selection",
     description:
-      'Everyone picks their available dates, and we’ll find the best time to travel.',
+      "Everyone picks their available dates, and we’ll find the best time to travel.",
     icon: Calendar1,
   },
   {
-    name: 'Tailored Recommendations',
+    name: "Tailored Recommendations",
     description:
-      'AI suggests destinations based on group preferences, budget, and real-time flight & hotel prices.',
+      "AI suggests destinations based on group preferences, budget, and real-time flight & hotel prices.",
     icon: Map,
   },
   {
-    name: 'Real-time Cost Estimates',
+    name: "Real-time Cost Estimates",
     description:
-      'No surprises—get approximate price breakdowns per person before booking.',
+      "No surprises—get approximate price breakdowns per person before booking.",
     icon: DollarSign,
   },
   {
-    name: 'Seamless Voting System',
+    name: "Seamless Voting System",
     description:
-      'Let everyone vote on destinations and finalize the trip with a simple majority decision.',
+      "Let everyone vote on destinations and finalize the trip with a simple majority decision.",
     icon: Vote,
   },
   {
-    name: 'Live Collaboration & Updates',
+    name: "Live Collaboration & Updates",
     description:
-      'Changes sync in real-time, so everyone stays updated as trip plans evolve.',
+      "Changes sync in real-time, so everyone stays updated as trip plans evolve.",
     icon: RefreshCw,
-  }
-]
+  },
+];
 
 export default function Home() {
   // The `useSession()` hook will be used to get the Clerk `session` object
-  const { session } = useSession()
-    
+  const { session } = useSession();
+  const router = useRouter();
+
   // Create a custom supabase client that injects the Clerk Supabase token into the request headers
   function createClerkSupabaseClient() {
     return createClient(
@@ -66,22 +74,22 @@ export default function Home() {
           // Get the custom Supabase token from Clerk
           fetch: async (url, options = {}) => {
             const clerkToken = await session?.getToken({
-              template: 'supabase',
-            })
-            
+              template: "supabase",
+            });
+
             // Insert the Clerk Supabase token into the headers
-            const headers = new Headers(options?.headers)
-            headers.set('Authorization', `Bearer ${clerkToken}`)
-            
+            const headers = new Headers(options?.headers);
+            headers.set("Authorization", `Bearer ${clerkToken}`);
+
             // Call the default fetch
             return fetch(url, {
               ...options,
               headers,
-            })
+            });
           },
         },
       },
-    )
+    );
   }
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center">
@@ -92,14 +100,21 @@ export default function Home() {
               Plan a group holiday with ease
             </h1>
             <p className="text-muted-foreground md:text-xl">
-              A website to plan your next holiday with friends and family hassle-free. No more wasting time chasing up in group chats.
+              A website to plan your next holiday with friends and family
+              hassle-free. No more wasting time chasing up in group chats.
             </p>
           </div>
           <div className="mt-10 flex items-center justify-center gap-x-6">
-            <Button size="lg" className="bg-primary">
+            <Button
+              onClick={() => router.push("/signup")}
+              size="lg"
+              className="bg-primary"
+            >
               Get Started
             </Button>
-            <Link href="/login">Already have an account? <span aria-hidden="true">→</span></Link>
+            <Link href="/login">
+              Already have an account? <span aria-hidden="true">→</span>
+            </Link>
           </div>
         </div>
         <div className="hidden lg:block relative">
@@ -113,7 +128,8 @@ export default function Home() {
             The perfect group trip starts here
           </h2>
           <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl">
-            No more chasing group chats. Easily plan, collaborate, and book your next holiday with friends and family—all in one place.
+            No more chasing group chats. Easily plan, collaborate, and book your
+            next holiday with friends and family—all in one place.
           </p>
         </div>
         <div className="grid md:grid-cols-3 gap-8 mt-16 mx-24">
@@ -124,7 +140,10 @@ export default function Home() {
             >
               <div className="absolute inset-0 bg-gradient-to-r from-primary/25 to-secondary/25 opacity-0 group-hover:opacity-100 transition-opacity blur-xl rounded-lg" />
               <div className="relative">
-                <div className="h-10 w-10 text-primary mb-4"> <feature.icon /> </div>
+                <div className="h-10 w-10 text-primary mb-4">
+                  {" "}
+                  <feature.icon />{" "}
+                </div>
                 <h3 className="font-bold text-xl mb-2">{feature.name}</h3>
                 <p className="text-muted-foreground">{feature.description}</p>
               </div>
@@ -133,5 +152,5 @@ export default function Home() {
         </div>
       </section>
     </div>
-  )
+  );
 }
