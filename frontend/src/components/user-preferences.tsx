@@ -9,10 +9,12 @@ import { addDays } from "date-fns"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import type { LucideIcon } from "lucide-react"
+import { Plus } from 'lucide-react';
+
 
 interface Preferences {
   tags: string[]
-  dateRange: { from: Date | null; to: Date | null }
+  dateRanges: { from: Date | null; to: Date | null }[]
   budget: { min: number; max: number }
 }
 
@@ -33,19 +35,19 @@ export function UserPreferences({ preferences, onPreferencesChange, suggestedTag
     }
   }
 
-  const [date, setDate] = useState<DateRange | undefined>({
-    from: new Date(),
-    to: addDays(new Date(), 20),
-  });
+  const dateRanges = preferences.dateRanges
 
-  useEffect(() => {
-    if (date) {
-      onPreferencesChange("dateRange", {
-        from: date?.from || null,
-        to: date?.to || null
-      })
-    }
-  }, [date])
+  const addDateRange = () => {
+    const newRange = { from: new Date(), to: addDays(new Date(), 20) }
+    const updatedRanges = [...dateRanges, newRange]
+    onPreferencesChange("dateRanges", updatedRanges)
+  }
+
+  const updateDateRange = (index: number, newRange: DateRange) => {
+    const updatedRanges = dateRanges.map((range, i) => (i === index ? newRange : range))
+    onPreferencesChange("dateRanges", updatedRanges)
+    console.log(updatedRanges)
+  }
 
   const updateBudget = (field: "min" | "max", value: string) => {
     const updatedBudget = { ...preferences.budget, [field]: Number.parseInt(value) || 0 }
@@ -89,7 +91,16 @@ export function UserPreferences({ preferences, onPreferencesChange, suggestedTag
       </div>
       <div className="space-y-4">
         <Label>Available Dates</Label>
-        <DatePickerWithRange date={date} setDate={setDate} />
+        <div className="flex flex-wrap flex-row gap-2">
+        {dateRanges.map((range, index) => (
+          <div key={index} className="flex gap-2">
+            <DatePickerWithRange date={range} setDate={(newRange) => updateDateRange(index, newRange)} />
+          </div>
+        ))}
+        </div>
+        <Button onClick={addDateRange}>
+          <Plus />
+        </Button>
       </div>
       <div className="space-y-4">
         <Label>Budget Range</Label>

@@ -16,6 +16,7 @@ import {
     Utensils,
     Camera,
 } from "lucide-react"
+import { DateRange } from "react-day-picker"
 
 const suggestedTags = [
     { name: "Beach", icon: Beach },
@@ -45,14 +46,18 @@ const handleSubmitPreferences = async (
 ) => {
     if (!validatePreferences()) return;
 
-    const { dateRange, tags, budget } = preferences;
-    const datesAvailable = [];
-    let currentDate = dateRange.from ? new Date(dateRange.from) : new Date();
+    const { dateRanges, tags, budget } = preferences;
+    const datesAvailable = dateRanges.flatMap((range: DateRange) => {
+        const dates = [];
+        let currentDate = range.from ? new Date(range.from) : new Date();
 
-    while (dateRange.to && currentDate <= dateRange.to) {
-        datesAvailable.push(new Date(currentDate));
-        currentDate.setDate(currentDate.getDate() + 1);
-    }
+        while (range.to && currentDate <= new Date(range.to)) {
+            dates.push(new Date(currentDate));
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        return dates;
+    });
 
     const { error } = await supabaseClient
         .from('preferences')
@@ -84,23 +89,26 @@ export default function CreateGroupPage() {
 
     const [preferences, setPreferences] = useState({
         tags: [],
-        dateRange: { from: null as Date | null, to: null as Date | null },
+        dateRanges: [{ from: null as Date | null, to: null as Date | null }],
         budget: { min: 0, max: 0 },
     })
 
     const validatePreferences = () => {
-        const { dateRange, budget } = preferences
-        if (!dateRange.from || !dateRange.to) {
-        toast.error("Error", {
-            description: "Available dates must be set",
-        })
-        return false
-        }
-        if (dateRange.from < new Date() || dateRange.to < new Date()) {
-        toast.error("Error", {
-            description: "Available dates must be in the future",
-        })
-        return false
+        const { dateRanges, budget } = preferences
+        console.log(preferences)
+        for (const dateRange of dateRanges) {
+            if (!dateRange.from || !dateRange.to) {
+            toast.error("Error", {
+                description: "Available dates must be set",
+            })
+            return false
+            }
+            if (new Date(dateRange.from) < new Date() || new Date(dateRange.to) < new Date()) {
+            toast.error("Error", {
+                description: "Available dates must be in the future",
+            })
+            return false
+            }
         }
         
         if (budget.max < budget.min) {
@@ -151,7 +159,7 @@ export default function CreateGroupPage() {
     }
 
     return (
-        <div className="w-full max-w-4xl mx-auto px-4">
+        <div className="w-full max-w-4xl min-h-screen mx-auto px-4 flex-grow flex items-center justify-center ">
             <Toaster />
             <AnimatePresence mode="wait">
                 <motion.div

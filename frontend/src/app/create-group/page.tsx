@@ -87,7 +87,7 @@ export default function CreateGroupPage() {
     if (currentStep === 1) {
       const groupId = await createGroup()
       if (groupId) {
-        setGroupData({ ...groupData, link: `https://yourapp.com/group/${groupId}` })
+        setGroupData({ ...groupData, link: `https://group-holiday.vercel.app/group/${groupId}` })
         // router.push(`/group/${groupId}`)
       }
       toast.success("Group created successfully", {
@@ -133,8 +133,21 @@ export default function CreateGroupPage() {
     duration: 0.5,
   }
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Enter") {
+        handleNext()
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [currentStep, groupData])
+
   return (
-    <div className="w-full max-w-4xl mx-auto px-4">
+    <div className="w-full max-w-4xl min-h-screen mx-auto px-4 flex-grow flex items-center justify-center">
       <Toaster />
       <AnimatePresence mode="wait">
         <motion.div
@@ -144,7 +157,7 @@ export default function CreateGroupPage() {
           exit="out"
           variants={pageVariants}
           transition={pageTransition}
-          className="justify-center items-center"
+          className="justify-center items-center w-full max-w-xl"
         >
           <CreateGroupStep
             key={steps[currentStep].id}
@@ -175,7 +188,7 @@ export default function CreateGroupPage() {
               </Select>
             )}
             {currentStep === 2 && (
-              <div className="space-y-4">
+              <div className="space-y-4 w-full">
                 <p>Share this link with your group:</p>
                 <Input value={groupData.link || "Generating link..."} readOnly />
                 <Button className="w-full" onClick={() => navigator.clipboard.writeText(groupData.link)}>

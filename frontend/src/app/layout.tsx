@@ -33,7 +33,7 @@ export default function RootLayout({
           <div className="min-h-screen flex flex-col">
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
               <Header />
-              <main className="flex-grow flex items-center justify-center  bg-gray-50">{children}</main>
+              <main className="bg-gray-50">{children}</main>
             </ThemeProvider>
           </div>
         </body>
