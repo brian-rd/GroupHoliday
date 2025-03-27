@@ -15,8 +15,8 @@ import {
 } from "@/components/ui/popover"
 
 interface DatePickerWithRangeProps extends React.HTMLAttributes<HTMLDivElement> {
-  date: DateRange | undefined;
-  setDate: React.Dispatch<React.SetStateAction<DateRange | undefined>>;
+  date: DateRange | undefined | { from: Date | null; to: Date | null };
+  setDate: React.Dispatch<React.SetStateAction<DateRange | undefined>> | ((range: DateRange | undefined) => void);
 }
 
 export function DatePickerWithRange({
@@ -56,8 +56,8 @@ export function DatePickerWithRange({
           <Calendar
             initialFocus
             mode="range"
-            defaultMonth={date?.from}
-            selected={date}
+            defaultMonth={date?.from ?? undefined}
+            selected={date && { from: date.from || undefined, to: date.to || undefined }}
             onSelect={setDate}
             numberOfMonths={2}
           />

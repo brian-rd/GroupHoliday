@@ -94,7 +94,7 @@ export function UserPreferences({ preferences, onPreferencesChange, suggestedTag
         <div className="flex flex-wrap flex-row gap-2">
         {dateRanges.map((range, index) => (
           <div key={index} className="flex gap-2">
-            <DatePickerWithRange date={range} setDate={(newRange) => updateDateRange(index, newRange)} />
+            <DatePickerWithRange date={range} setDate={(newRange: DateRange | undefined) => newRange && updateDateRange(index, newRange)} />
           </div>
         ))}
         </div>
