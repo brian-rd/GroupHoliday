@@ -10,10 +10,10 @@ For the last two years I've been in charge of organising group holidays, so I've
 
 ## Features ✏️
 
-- [ ] Secure authentication with multiple sign-in methods, such as Google, and email confirmation
+- [x] Secure authentication with multiple sign-in methods, such as Google, and email confirmation
 - [ ] User profile and preferences/settings
 - [ ] Create and manage trip groups
-- [ ] Collect availability and travel preferences
+- [x] Collect availability and travel preferences
 - [ ] AI-assisted preference interpretation?
 - [ ] Summarised group preferences, budgets, dates, insights
 - [ ] AI-generated destination suggestions
