@@ -17,6 +17,8 @@ import {
     Camera,
 } from "lucide-react"
 import { DateRange } from "react-day-picker"
+import { set } from "date-fns"
+import { GroupDashboard } from "@/components/group/group-dashboard"
 
 const suggestedTags = [
     { name: "Beach", icon: Beach },
@@ -81,17 +83,31 @@ const handleSubmitPreferences = async (
     }
 };
 
+const checkUserPreferences = async (userId: string, groupId: string, supabaseClient: any) => {
+    const { data, error } = await supabaseClient
+        .from('preferences')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('group_id', groupId)
+        .single();
+
+    if (error || !data) {
+        return false;
+    }
+    return true;
+};
+
 
 export default function CreateGroupPage() {
     const { user } = useUser()
     const { session } = useSession()
     const [supabaseClient, setSupabaseClient] = useState<any>(null)
-
     const [preferences, setPreferences] = useState({
         tags: [],
         dateRanges: [{ from: null as Date | null, to: null as Date | null }],
         budget: { min: 0, max: 0 },
     })
+    const [hasPreferences, setHasPreferences] = useState<boolean | null>(null)
 
     const validatePreferences = () => {
         const { dateRanges, budget } = preferences
@@ -145,6 +161,19 @@ export default function CreateGroupPage() {
 
                             if (error || !data) {
                                     router.push('/not-found')
+                            } else {
+                                const { data, error } = await supabaseClient
+                                    .from('preferences')
+                                    .select('id')
+                                    .eq('user_id', user.id)
+                                    .eq('group_id', id)
+                                    .single()
+
+                                if (error || !data) {
+                                    setHasPreferences(false);
+                                } else {
+                                    setHasPreferences(true);
+                                }
                             }
                     }
             }
@@ -158,30 +187,37 @@ export default function CreateGroupPage() {
         }))
     }
 
-    return (
-        <div className="w-full max-w-4xl min-h-screen mx-auto px-4 flex-grow flex items-center justify-center ">
-            <Toaster />
-            <AnimatePresence mode="wait">
-                <motion.div
-                    initial="initial"
-                    animate="in"
-                    exit="out"
-                    variants={pageVariants}
-                    transition={pageTransition}
-                    className="w-full"
-                >
-                    <UserPreferences
-                        preferences={preferences}
-                        onPreferencesChange={(field, value) => handleInputChange(field, value)}
-                        suggestedTags={suggestedTags}
-                    />
-                    <div className="flex-1 py-6 flex justify-end">
-                        <Button onClick={() => handleSubmitPreferences(preferences, user, id, supabaseClient, validatePreferences, toast)}>
-                            Submit
-                        </Button>
-                    </div>
-                </motion.div>
-            </AnimatePresence>
-        </div>
-    )
+    if (hasPreferences === false) {
+        return (
+            <div className="w-full max-w-4xl min-h-screen mx-auto px-4 flex-grow flex items-center justify-center ">
+                <Toaster />
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        initial="initial"
+                        animate="in"
+                        exit="out"
+                        variants={pageVariants}
+                        transition={pageTransition}
+                        className="w-full"
+                    >
+                        <UserPreferences
+                            preferences={preferences}
+                            onPreferencesChange={(field, value) => handleInputChange(field, value)}
+                            suggestedTags={suggestedTags}
+                        />
+                        <div className="flex-1 py-6 flex justify-end">
+                            <Button onClick={() => handleSubmitPreferences(preferences, user, id, supabaseClient, validatePreferences, toast)}>
+                                Submit
+                            </Button>
+                        </div>
+                    </motion.div>
+                </AnimatePresence>
+            </div>
+        )
+    } else {
+        return (
+            <GroupDashboard />
+        )
+    }
+
 }

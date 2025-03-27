@@ -4,6 +4,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
 import {
   ClerkProvider,
   SignInButton,
@@ -12,6 +13,7 @@ import {
   SignedOut,
   UserButton,
 } from '@clerk/nextjs'
+import Link from "next/link"
 
 
 const inter = Inter({ subsets: ["latin"] })
@@ -34,6 +36,7 @@ export default function RootLayout({
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
               <Header />
               <main className="bg-gray-50">{children}</main>
+              <Footer />
             </ThemeProvider>
           </div>
         </body>
