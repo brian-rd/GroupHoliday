@@ -17,10 +17,14 @@ import Link from "next/link"
 
 
 const inter = Inter({ subsets: ["latin"] })
+const isDevelopment = process.env.NODE_ENV === 'development'
 
 export const metadata: Metadata = {
   title: "Voyagen",
   description: "Group Holiday Planner",
+  icons: {
+    icon: isDevelopment ? '/dev_favicon.ico' : '/favicon.ico'
+  }
 }
 
 export default function RootLayout({
